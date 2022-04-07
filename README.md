@@ -1,2 +1,2 @@
 # SoftArm-SOFA
-This is the code for creating a soft arm inside SOFA controlled by cable force
+The Soft arm is controlled by a cable. The cable goes through the soft arm so, there are only two points in the cable mechanical object one at the begging of the cable and one at the end.
