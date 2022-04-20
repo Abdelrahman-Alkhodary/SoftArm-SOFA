@@ -1,8 +1,8 @@
 import os
 from platform import node 
 import Sofa
+import SofaRuntime
 from ControllerForce import ControllerForce
-from stlib3.scene import MainHeader
 
 '''
 length of the arm is 600 mm
@@ -11,15 +11,16 @@ Tip radius is 7.5 mm
 '''
 
 armYoungModulus=110
-armPoissonRatio=0.5
+armPoissonRatio=0.33
 armMass=0.1279
+
 
 
 
 def createScene(rootNode):
     rootNode.addObject('RequiredPlugin', pluginName=['SoftRobots','SofaSparseSolver','SofaPreconditioner','SofaPython3','SofaConstraint',
                                                      'SofaImplicitOdeSolver','SofaLoader','SofaSimpleFem','SofaBoundaryCondition','SofaEngine',
-                                                     'SofaOpenglVisual', "SofaDeformable"])
+                                                     'SofaOpenglVisual', "SofaDeformable", 'SofaGeneralLoader'])
 
     rootNode.addObject('VisualStyle',
                        displayFlags='showVisualModels hideBehaviorModels showCollisionModels hideBoundingCollisionModels hideForceFields showInteractionForceFields hideWireframe')
@@ -63,7 +64,7 @@ def createScene(rootNode):
 
     # The arm base is in the x-y plane and the height is in the z-direction
     # box points = [xmin, ymin, zmin, xmax, ymax, zmax]
-    arm.addObject('BoxROI', name='ROI', box=[-30, -30, 0, 30, 30, 10], drawBoxes=True)
+    arm.addObject('BoxROI', name='ROI', box=[-40, -40, 0, 40, 40, 30], drawBoxes=True)
 
     # RestShapeSpringsForceField is one way in Sofa to implement fixed point constraint.
     # Here the constraints are applied to the DoFs selected by the previously defined BoxROI
@@ -71,26 +72,90 @@ def createScene(rootNode):
 
     arm.addObject('LinearSolverConstraintCorrection')
 
+    
 
     ##########################################
     # Cables                                 #
     ##########################################
     
-    ######## Cable 0 ###########
-    cable = arm.addChild('cable')
-    cable.addObject('MechanicalObject',  position=[[25, 0, 0], [5, 0, 600]])
+    ######## Cable 1 ###########
+    cable_1 = arm.addChild('cable_1')
+    position =[]
+    for i in range(0, 601, 50):
+        position.append([5, 0, i])
+
+    cable_1.addObject('MechanicalObject',  position=position)
 
     # Add a CableConstraint object with a name.
     # the indices are referring to the MechanicalObject's positions.
     # The last index is where the pullPoint is connected.
     # By default, the Cable is controlled by displacement, rather than force.
-    cable.addObject('CableConstraint', name="aCable", indices=list(range(2)), pullPoint=[25, 0, -15], valueType='force')
+    cable_1.addObject('CableConstraint', name="aCable_1", indices=list(range(len(position))), pullPoint=[5, 0, -15], valueType='force')
 
     # This adds a BarycentricMapping. A BarycentricMapping is a key element as it will add a bidirectional link
     # between the cable's DoFs and the finger's ones so that movements of the cable's DoFs will be mapped
     # to the finger and vice-versa;
-    cable.addObject('BarycentricMapping')
+    cable_1.addObject('BarycentricMapping')
 
+
+    ######## Cable 2 ###########
+    cable_2 = arm.addChild('cable_2')
+    position =[]
+    for i in range(0, 601, 50):
+        position.append([-5, 0, i])
+
+    cable_2.addObject('MechanicalObject',  position=position)
+
+    # Add a CableConstraint object with a name.
+    # the indices are referring to the MechanicalObject's positions.
+    # The last index is where the pullPoint is connected.
+    # By default, the Cable is controlled by displacement, rather than force.
+    cable_2.addObject('CableConstraint', name="aCable_2", indices=list(range(len(position))), pullPoint=[-5, 0, -15], valueType='force')
+
+    # This adds a BarycentricMapping. A BarycentricMapping is a key element as it will add a bidirectional link
+    # between the cable's DoFs and the finger's ones so that movements of the cable's DoFs will be mapped
+    # to the finger and vice-versa;
+    cable_2.addObject('BarycentricMapping')
+
+    ######## Cable 3 ###########
+    cable_3 = arm.addChild('cable_3')
+    position =[]
+    for i in range(0, 601, 50):
+        position.append([0, 5, i])
+
+    cable_3.addObject('MechanicalObject',  position=position)
+
+    # Add a CableConstraint object with a name.
+    # the indices are referring to the MechanicalObject's positions.
+    # The last index is where the pullPoint is connected.
+    # By default, the Cable is controlled by displacement, rather than force.
+    cable_3.addObject('CableConstraint', name="aCable_3", indices=list(range(len(position))), pullPoint=[0, 5, -15], valueType='force')
+
+    # This adds a BarycentricMapping. A BarycentricMapping is a key element as it will add a bidirectional link
+    # between the cable's DoFs and the finger's ones so that movements of the cable's DoFs will be mapped
+    # to the finger and vice-versa;
+    cable_3.addObject('BarycentricMapping')
+
+
+    ######## Cable 4 ###########
+    cable_4 = arm.addChild('cable_4')
+    position =[]
+    for i in range(0, 601, 50):
+        position.append([0, -5, i])
+
+    cable_4.addObject('MechanicalObject',  position=position)
+
+    # Add a CableConstraint object with a name.
+    # the indices are referring to the MechanicalObject's positions.
+    # The last index is where the pullPoint is connected.
+    # By default, the Cable is controlled by displacement, rather than force.
+    cable_4.addObject('CableConstraint', name="aCable_4", indices=list(range(len(position))), pullPoint=[0, -5, -15], valueType='force')
+
+    # This adds a BarycentricMapping. A BarycentricMapping is a key element as it will add a bidirectional link
+    # between the cable's DoFs and the finger's ones so that movements of the cable's DoFs will be mapped
+    # to the finger and vice-versa;
+    cable_4.addObject('BarycentricMapping')
+    
 
     ##########################################
     # CONTROLLER                             #
@@ -99,10 +164,10 @@ def createScene(rootNode):
     # This adds a PythonScriptController that permits to programmatically implement new behavior
     # or interactions using the Python programming language. The controller is referring to a
     # file named "controller.py".
+    #cable.addObject(ControllerForce(node=cable))
     arm.addObject(ControllerForce(node=arm))
 
-
-
+    
     ##########################################
     # Visualization                          #
     ##########################################
